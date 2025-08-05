@@ -1,0 +1,213 @@
+{
+  "name": "Paperless>Todoist",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        112
+      ],
+      "id": "27176d2d-3375-48c8-b734-7f01896b72df"
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "url": "http://192.168.188.66:8810/api/documents/?tags__id=3&tags__id__none=25",
+        "allowUnauthorizedCerts": true,
+        "options": {},
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Get Paperless Docs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        112
+      ],
+      "id": "2c56e942-5051-4757-864a-79ef5554dc46",
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "AhGP0lyjJlktcyng",
+          "name": "Paperless"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const results = items[0].json.results;\nreturn results.map(d => ({ json: d }));\n"
+      },
+      "name": "Split Documents",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "6ad84b2d-4df7-463d-bf10-5b34a6b201a5"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "1219398529",
+          "mode": "list",
+          "cachedResultName": "Inbox"
+        },
+        "labels": [
+          "2181039126"
+        ],
+        "content": "={{ $json.title }}",
+        "options": {
+          "description": "=Link: https://paperless-ngx.familie-traub.synology.me/documents/{{ $json.id }}/details \n\n\n\n",
+          "dueString": ""
+        }
+      },
+      "name": "Create Todoist Task",
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d9a183b7-258d-4db2-86a9-8c243219c19f",
+      "credentials": {
+        "todoistApi": {
+          "id": "kQoPh7lZrPQ6MPEN",
+          "name": "Todoist account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "requestMethod": "PATCH",
+        "url": "=http://192.168.188.66:8810/api/documents/{{ $('Get Paperless Docs').item.json.results[0].id }}",
+        "options": {},
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Add 'todoist' Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        208,
+        112
+      ],
+      "id": "45c7b4ab-8ca9-4ae7-a814-1d94b6c1e689",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "AhGP0lyjJlktcyng",
+          "name": "Paperless"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.188.66:8777/paperless_todo",
+        "allowUnauthorizedCerts": true,
+        "responseFormat": "string",
+        "options": {}
+      },
+      "name": "Send ntfy Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "31ed5a39-3dbd-4711-a8ac-7f52c8d7e1c2",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Get Paperless Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Paperless Docs": {
+      "main": [
+        [
+          {
+            "node": "Split Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Documents": {
+      "main": [
+        [
+          {
+            "node": "Create Todoist Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Todoist Task": {
+      "main": [
+        [
+          {
+            "node": "Add 'todoist' Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add 'todoist' Tag": {
+      "main": [
+        [
+          {
+            "node": "Send ntfy Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e89927c6-f788-43c2-a961-be82d2b19f46",
+  "meta": {
+    "instanceId": "ece13347ef28f1863909faa893fd2aac501bd9477c9a7471cad4f26b6c66c0cb"
+  },
+  "id": "Inm8I3pCWGYkYRaQ",
+  "tags": []
+}
